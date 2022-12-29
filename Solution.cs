@@ -25,7 +25,7 @@ class Player
         Console.WriteLine("Enter the amount of money you will place into the machine. Enter in the form '0.50' for 50p etc.");
         Console.Write(">>>");
         string inputBalance = Console.ReadLine();
-        //check if float between 0.01 and 1.00, special error for 0.00, no more than 2 dp.
+        //check if float between 0.01 and 1.00, special error for 0.00, no more than 2 dp
 
 
     }
