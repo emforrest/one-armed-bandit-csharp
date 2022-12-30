@@ -6,7 +6,17 @@ using System;
 
 class Reel 
 {
+    bool hold = false;
 
+    public bool GetHold()
+    {
+        return hold;
+    }
+
+    public void SetHold(new)
+    {
+        hold = new;
+    }
 }
 
 class Player
@@ -18,14 +28,34 @@ class Player
         return balance;
     }
 
-    public void AddBalance()
+    public void AddBalance(FileStream tfs)
     {
         //Ask the user to input money
         Console.WriteLine("Enter up to £1 into the machine. It is 10p per spin.");
-        Console.WriteLine("Enter the amount of money you will place into the machine. Enter in the form '0.50' for 50p etc.");
-        Console.Write(">>>");
-        string inputBalance = Console.ReadLine();
-        //check if float between 0.01 and 1.00, special error for 0.00, no more than 2 dp
+        bool validInput = false;
+        double inputBalance = 0;
+        while(!validInput)
+        {
+            Console.WriteLine("Enter the amount of money you will place into the machine. Enter in the form '0.50' for 50p etc.");
+            Console.Write(">>>");
+            string inputBalanceString = Console.ReadLine();
+            
+            //check if this input is valid
+            if (double.TryParse(inputBalanceString, out inputBalance) && 0<inputBalance && inputBalance<=1)
+            {
+                inputBalance = Math.Round(inputBalance, 2, MidpointRounding.ToZero);
+                validInput = true;
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Enter a value between 0 and 1.");
+            }
+        }
+        balance = inputBalance;
+        //update Transactions file
+        StreamWriter sw = new StreamWriter(tfs);
+        sw.WriteLine($"Money input : {inputBalance}");
+        sw.Close()
 
 
     }
@@ -33,6 +63,24 @@ class Player
 
 class Game
 {
+    FileStream tfs = new FileStream("Transactions.txt", FileMode.Create, FileAccess.ReadWrite);
+    FileStream srfs = new FileStream("SpinResults.txt", FileMode.Create, FileAccess.ReadWrite);
+    Player player = new Player();
+    Reel reel1 = new Reel();
+    Reel reel2 = new Reel();
+    Reel reel3 = new Reel();
+
+    void initialiseTextFiles()
+    {
+        StreamWriter sw = new StreamWriter(tfs);
+        sw.WriteLine("A record of transactions in the One-Armed Bandit simulation.");
+        sw.Close();
+        StreamWriter sw = new StreamWriter(srfs);
+        sw.WriteLine("A record of the spin results in the One-Armed Bandit simulation.");
+        sw.Close();
+    }
+   
+
     public bool Menu()
     {
         //Output the main menu
@@ -50,8 +98,43 @@ What would you like to do?
         {
             //call Play, at the sart of Play check if the user has enough money, if not call getMoney
         }
+        //else - close files before quitting.
 
         return true;
+
+    }
+
+    void Play()
+    {
+        //Check that the user has enough money to spin
+        if (player.GetBalance() <0.1)
+        {
+            player.AddBalance(tfs);
+        }
+        //Ask if the user would like to hold any reels
+        Console.WriteLine("How many reels would you like to hold?");
+        bool validInput = false;
+        int inputHold;
+        while (!validInput)
+        {
+            Console.WriteLine("Enter 0, 1 or 2.");
+            Console.Write(">>>");
+            string inputHoldString = Console.ReadLine();
+            if (int.TryParse(inputHoldString, out inputHold) && 0<= inputHold && inputHold<=2)
+            {
+                validInput = true;
+            }
+            else
+            {
+                Console.WriteLine("Invalid input.");
+            }
+        }
+        //Set the appropriate reel attributes
+        if (inputHold == 2)
+        {
+            reel2.
+        }
+
 
     }
 }
@@ -75,10 +158,6 @@ class Simulation
     static void Main()
     {
         Game game = new Game();
-        Player player = new Player();
-        Reel reel1 = new Reel();
-        Reel reel2 = new Reel();
-        Reel reel3 = new Reel();
         //welcome the player
         Console.WriteLine("Welcome to the One-Armed Bandit Simulation.");
         //run the simulation until the user chooses to quit
