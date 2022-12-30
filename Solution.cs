@@ -129,8 +129,8 @@ What would you like to do?
                 Console.WriteLine("Invalid input.");
             }
         }
-        //Set the appropriate reel attributes
-        if (inputHold == 2)
+        //Set the appropriate reel attributes 
+        if (inputHold == 2) 
         {
             reel2.
         }
