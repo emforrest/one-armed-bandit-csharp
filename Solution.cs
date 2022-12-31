@@ -7,15 +7,11 @@ using System;
 class Reel 
 {
     bool hold = false;
-
-    public bool GetHold()
+    
+    public bool Hold
     {
-        return hold;
-    }
-
-    public void SetHold(new)
-    {
-        hold = new;
+        get {return hold;}
+        set {hold = value;}
     }
 }
 
@@ -23,9 +19,10 @@ class Player
 {
     double balance = 0;
 
-    public double GetBalance()
+    public double Balance
     {
-        return balance;
+        get {return balance;}
+        set {balance = value;}
     }
 
     public void AddBalance(FileStream tfs)
@@ -55,7 +52,7 @@ class Player
         //update Transactions file
         StreamWriter sw = new StreamWriter(tfs);
         sw.WriteLine($"Money input : {inputBalance}");
-        sw.Close()
+        sw.Close();
 
 
     }
@@ -75,9 +72,9 @@ class Game
         StreamWriter sw = new StreamWriter(tfs);
         sw.WriteLine("A record of transactions in the One-Armed Bandit simulation.");
         sw.Close();
-        StreamWriter sw = new StreamWriter(srfs);
-        sw.WriteLine("A record of the spin results in the One-Armed Bandit simulation.");
-        sw.Close();
+        StreamWriter sw2 = new StreamWriter(srfs);
+        sw2.WriteLine("A record of the spin results in the One-Armed Bandit simulation.");
+        sw2.Close();
     }
    
 
@@ -96,7 +93,7 @@ What would you like to do?
         //Call the specified function
         if (selected == "1")
         {
-            //call Play, at the sart of Play check if the user has enough money, if not call getMoney
+            Play();
         }
         //else - close files before quitting.
 
@@ -107,14 +104,14 @@ What would you like to do?
     void Play()
     {
         //Check that the user has enough money to spin
-        if (player.GetBalance() <0.1)
+        if (player.Balance <0.1)
         {
             player.AddBalance(tfs);
         }
         //Ask if the user would like to hold any reels
         Console.WriteLine("How many reels would you like to hold?");
         bool validInput = false;
-        int inputHold;
+        int inputHold = 0;
         while (!validInput)
         {
             Console.WriteLine("Enter 0, 1 or 2.");
@@ -132,8 +129,31 @@ What would you like to do?
         //Set the appropriate reel attributes 
         if (inputHold == 2) 
         {
-            reel2.
+            reel2.Hold = true;
+            reel3.Hold = true;
         }
+        else if (inputHold == 1)
+        {
+            reel3.Hold = true;
+        }
+        //Output the winning combinations
+        Console.WriteLine("The winning combinations are as follows:");
+        string winCombos = @"
+        7	7	7	= £20.00
+	BAR	BAR	BAR	= £5.00
+	bell	bell	bell	= £3.00
+	cherry	cherry	cherry	= £1.00";
+        Console.WriteLine(winCombos);
+        //Output number of spins remaining
+        int spinsRemaining = Convert.ToInt32(Math.Round(player.Balance *10, 0, MidpointRounding.ToZero));
+        Console.WriteLine($"You have {spinsRemaining} spins remaining.");
+        //Ask the user to run the machine
+        Console.WriteLine("Hit Enter to run the machine.");
+        Console.ReadLine();
+        //Take 10p away from the user's balance
+        player.Balance -= 0.1;
+        //Spin each reel
+        
 
 
     }
