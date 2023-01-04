@@ -13,6 +13,15 @@ class Reel
         get {return hold;}
         set {hold = value;}
     }
+
+    public string Spin()
+    {
+        //Get a random symbol from those available
+        string[] symbols = {"7", "BAR", "bell", "cherry", "watermelon", "grapes", "horseshoe"};
+        Random rnd = new Random();
+        int index = rnd.Next(0, 7);
+        return symbols[index]; 
+    }
 }
 
 class Player
@@ -25,7 +34,7 @@ class Player
         set {balance = value;}
     }
 
-    public void AddBalance(FileStream tfs)
+    public void AddBalance()
     {
         //Ask the user to input money
         Console.WriteLine("Enter up to £1 into the machine. It is 10p per spin.");
@@ -50,9 +59,12 @@ class Player
         }
         balance = inputBalance;
         //update Transactions file
-        StreamWriter sw = new StreamWriter(tfs);
+        FileStream fs3 = new FileStream("Transactions.txt", FileMode.Append);
+        StreamWriter sw = new StreamWriter(fs3);
         sw.WriteLine($"Money input : {inputBalance}");
+        sw.WriteLine();
         sw.Close();
+        fs3.Close();
 
 
     }
@@ -60,21 +72,25 @@ class Player
 
 class Game
 {
-    FileStream tfs = new FileStream("Transactions.txt", FileMode.Create, FileAccess.ReadWrite);
-    FileStream srfs = new FileStream("SpinResults.txt", FileMode.Create, FileAccess.ReadWrite);
     Player player = new Player();
     Reel reel1 = new Reel();
     Reel reel2 = new Reel();
     Reel reel3 = new Reel();
 
-    void initialiseTextFiles()
+    public void InitialiseTextFiles()
     {
-        StreamWriter sw = new StreamWriter(tfs);
+        FileStream fs1 = new FileStream("Transactions.txt", FileMode.Create, FileAccess.ReadWrite);
+        FileStream fs2 = new FileStream("SpinResults.txt", FileMode.Create, FileAccess.ReadWrite);
+        StreamWriter sw = new StreamWriter(fs1);
         sw.WriteLine("A record of transactions in the One-Armed Bandit simulation.");
+        sw.WriteLine();
         sw.Close();
-        StreamWriter sw2 = new StreamWriter(srfs);
+        fs1.Close();
+        StreamWriter sw2 = new StreamWriter(fs2);
         sw2.WriteLine("A record of the spin results in the One-Armed Bandit simulation.");
+        sw2.WriteLine();
         sw2.Close();
+        fs2.Close();
     }
    
 
@@ -95,9 +111,17 @@ What would you like to do?
         {
             Play();
         }
-        //else - close files before quitting.
+        else if (selected == "2")
+        {
+            ViewFiles();
+        }
+        else
+        {
+            Console.WriteLine("Goodbye.");
+            return true;
+        }
 
-        return true;
+        return false;
 
     }
 
@@ -106,7 +130,7 @@ What would you like to do?
         //Check that the user has enough money to spin
         if (player.Balance <0.1)
         {
-            player.AddBalance(tfs);
+            player.AddBalance();
         }
         //Ask if the user would like to hold any reels
         Console.WriteLine("How many reels would you like to hold?");
@@ -152,10 +176,133 @@ What would you like to do?
         Console.ReadLine();
         //Take 10p away from the user's balance
         player.Balance -= 0.1;
+        player.Balance = Math.Round(player.Balance, 2);
         //Spin each reel
+        Reel[] reels = {reel1, reel2, reel3};
+        string[] symbols = {reel1.Spin(), reel2.Spin(), reel3.Spin()};
         
+        //Display the results
+        for (int i = 1; i <=10; i++)
+        {
+            Console.Write("* ");
+            System.Threading.Thread.Sleep(300);
+        }
+        Console.WriteLine();
+        for (int i = 0; i<=2; i++)
+        {
+            if (reels[i].Hold == true)
+            {
+                //Wait a few extra seconds before displaying the symbol
+                System.Threading.Thread.Sleep(3000);
+            }
+            else
+            {
+                System.Threading.Thread.Sleep(500);
+            }
+            Console.Write(symbols[i]);
+            Console.Write("   ");
+        }
+        Console.WriteLine();
+        //Determine if the player has won
+        string[] winPayout = CheckIfWon(symbols);
+        bool win = Convert.ToBoolean(winPayout[0]);
+        double payout = Convert.ToDouble(winPayout[1]);
+        //Add the payout to the user's balance
+        if (win == true)
+        {
+            player.Balance += payout;
+            Console.WriteLine("You won. Congratulations!");
+        }
+        else
+        {
+            Console.WriteLine("You lost. Better luck next time.");
+        }
+        //Update the text files
+        FileStream fs4 = new FileStream("Transactions.txt", FileMode.Append);
+        FileStream fs5 = new FileStream("SpinResults.txt", FileMode.Append);
+        StreamWriter sw = new StreamWriter(fs4);
+        sw.WriteLine($"Payout: {payout}");
+        sw.WriteLine($"Current balance: {player.Balance}");
+        sw.WriteLine();
+        sw.Close();
+        fs4.Close();
+        StreamWriter sw2 = new StreamWriter(fs5);
+        string symbolsString = $"{symbols[0]}   {symbols[1]}   {symbols[2]}";
+        sw2.WriteLine($"Results: {symbolsString}");
+        sw2.WriteLine($"Win: {win}");
+        sw2.WriteLine($"Payout: {payout}");
+        sw2.WriteLine();
+        sw2.Close();
+        fs5.Close();
+    }
 
+    string[] CheckIfWon(string[] symbols)
+    {
+        if (symbols[0] == symbols[1] && symbols[0]== symbols[2])
+        {
+            if (symbols[0] == "7")
+            {
+                string[] returnList = {"true", "20.00"};
+                return  returnList;
+            }
+            else if (symbols[0] == "BAR")
+            {
+                string[] returnList = {"true", "5.00"};
+                return  returnList;
+            }
+            else if (symbols[0] == "bell")
+            {
+                string[] returnList = {"true", "3.00"};
+                return  returnList;
+            }
+            else if (symbols[0] == "cherry")
+            {
+                string[] returnList = {"true", "1.00"};
+                return  returnList;
+            }
+        }
+        string[] loseReturnList = {"false", "0.00"};
+        return  loseReturnList;
+    }
 
+    void ViewFiles()
+    {
+        //Ask the user to select a file
+        Console.WriteLine(@"
+Which file do you want to view?
+    '1' - Transactions.txt
+    '2' - SpinResults.txt
+");
+        string[] options = {"1", "2"};
+        string selected = Simulation.UserInput(options);
+
+        //Output the file
+        if (selected == "1")
+        {
+            FileStream fs6 = new FileStream("Transactions.txt", FileMode.Open);
+            StreamReader sw1 = new StreamReader(fs6);
+            string line = sw1.ReadLine();
+            while (line != null)
+            {
+                Console.WriteLine(line);
+                line = sw1.ReadLine();
+            }
+            sw1.Close();
+            fs6.Close();
+        }
+        else
+        {
+            FileStream fs7 = new FileStream("SpinResults.txt", FileMode.Open);
+            StreamReader sw2 = new StreamReader(fs7);
+            string line = sw2.ReadLine();
+            while (line != null)
+            {
+                Console.WriteLine(line);
+                line = sw2.ReadLine();
+            }
+            sw2.Close();
+            fs7.Close();
+        }
     }
 }
 
@@ -180,13 +327,15 @@ class Simulation
         Game game = new Game();
         //welcome the player
         Console.WriteLine("Welcome to the One-Armed Bandit Simulation.");
+        //initialise the text files
+        game.InitialiseTextFiles();
         //run the simulation until the user chooses to quit
         bool quit = false;
-        while (!quit)
+        while (quit != true)
         {
             quit = game.Menu();
         }
     }
 }
 
-//https://blog.mwpreston.net/2018/09/24/how-to-run-c-sharp-in-visual-studio-code/ 
+//debug text files!!
