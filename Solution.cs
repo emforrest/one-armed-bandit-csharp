@@ -337,5 +337,3 @@ class Simulation
         }
     }
 }
-
-//debug text files!!
